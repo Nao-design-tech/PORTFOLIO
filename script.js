@@ -1,19 +1,25 @@
-/* ==========================================================================
-   CONFIGURATION — Les deux seules choses à modifier sans toucher au reste
-   ========================================================================== */
-const CONFIG = {
-  // Adresse email qui recevra les messages envoyés depuis le formulaire de contact
-  EMAIL_CONTACT: "naomiengangue@gmail.com",
+// ==================================================
+// CONFIGURATION — À MODIFIER FACILEMENT
+// ==================================================
+const CONTACT_EMAIL = "naomiengangue@gmail.com";
 
-  // Intitulés de poste affichés en boucle dans le hero (2 à 4 entrées conseillées)
-  INTITULES_POSTE: [
+const CV_URL = "assets/cv/CV-Naomie-Ngangue.pdf";
+
+const animatedTitles = [
+    "Professionnelle de l'Assurance & de la Réassurance",
     "Community Manager",
-    "Conseillère en Assurance",
-    "Chargée de Communication Digitale",
-    "Passionnée de Réassurance"
-  ]
+    "Digital & Communication",
+    "Créative & entrepreneure"
+];
+
+// Réseaux sociaux — modifiez ici si vos liens changent
+const SOCIAL_LINKS = {
+    linkedin: "https://www.linkedin.com/in/naomie-ngangue-hande-35428b1b3",
+    instagram: "https://www.instagram.com/naohadja",
+    tiktok: "https://www.tiktok.com/@naomiehadja",
+    facebook: "https://www.facebook.com/share/1HG3uzZfiA/"
 };
-/* ========================================================================== */
+// ==================================================
 
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -23,24 +29,34 @@ document.addEventListener("DOMContentLoaded", () => {
   const yearEl = document.getElementById("year");
   if (yearEl) yearEl.textContent = new Date().getFullYear();
 
-  /* ---------- Effet machine à écrire (intitulés de poste) ---------- */
+  /* ---------- Application de la configuration (CV) ---------- */
+  ["heroDownloadCv", "cvDownload", "ctaDownloadCv"].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.setAttribute("href", CV_URL);
+  });
+  const cvView = document.getElementById("cvView");
+  if (cvView) cvView.setAttribute("href", CV_URL);
+
+  const emailDisplay = document.getElementById("contactEmailDisplay");
+  if (emailDisplay) emailDisplay.textContent = CONTACT_EMAIL;
+
+  /* ---------- Effet machine à écrire (intitulés animés) ---------- */
   const typewriterEl = document.getElementById("typewriter");
   if (typewriterEl) {
     if (prefersReducedMotion) {
-      // Sans animation : on affiche simplement le premier intitulé
-      typewriterEl.textContent = CONFIG.INTITULES_POSTE[0] || "";
+      typewriterEl.textContent = animatedTitles[0] || "";
     } else {
       let titleIndex = 0;
       let charIndex = 0;
       let isDeleting = false;
 
-      const TYPING_SPEED = 65;
-      const DELETING_SPEED = 35;
-      const PAUSE_AFTER_TYPE = 1800; // pause avant d'effacer
-      const PAUSE_AFTER_DELETE = 400; // pause avant le mot suivant
+      const TYPING_SPEED = 55;
+      const DELETING_SPEED = 28;
+      const PAUSE_AFTER_TYPE = 2000;
+      const PAUSE_AFTER_DELETE = 400;
 
       function tick() {
-        const words = CONFIG.INTITULES_POSTE;
+        const words = animatedTitles;
         if (!words.length) return;
         const currentWord = words[titleIndex % words.length];
 
@@ -87,7 +103,6 @@ document.addEventListener("DOMContentLoaded", () => {
       navToggle.setAttribute("aria-expanded", String(isOpen));
       navToggle.setAttribute("aria-label", isOpen ? "Fermer le menu" : "Ouvrir le menu");
     });
-    // Ferme le menu mobile après le clic sur un lien
     navMenu.querySelectorAll(".nav__link").forEach(link => {
       link.addEventListener("click", () => {
         navMenu.classList.remove("is-open");
@@ -97,13 +112,15 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   /* ---------- Lien actif dans le menu selon la section visible ---------- */
-  const sections = document.querySelectorAll("main .section, .hero");
   const navLinks = document.querySelectorAll(".nav__link");
   const linkForSection = new Map();
   navLinks.forEach(link => {
     const id = link.getAttribute("href").replace("#", "");
     linkForSection.set(id, link);
   });
+  const navSections = Array.from(linkForSection.keys())
+    .map(id => document.getElementById(id))
+    .filter(Boolean);
 
   const sectionObserver = new IntersectionObserver((entries) => {
     entries.forEach(entry => {
@@ -115,7 +132,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }, { rootMargin: "-45% 0px -50% 0px", threshold: 0 });
 
-  sections.forEach(section => sectionObserver.observe(section));
+  navSections.forEach(section => sectionObserver.observe(section));
 
   /* ---------- Apparition progressive au défilement ---------- */
   const revealEls = document.querySelectorAll(".reveal");
@@ -133,6 +150,14 @@ document.addEventListener("DOMContentLoaded", () => {
     revealEls.forEach(el => revealObserver.observe(el));
   }
 
+  /* ---------- Galerie créative : masquer élégamment une image manquante ---------- */
+  document.querySelectorAll(".gallery__item img").forEach(img => {
+    img.addEventListener("error", () => {
+      img.closest(".gallery__item").classList.add("gallery__item--missing");
+      img.remove();
+    });
+  });
+
   /* ---------- Formulaire de contact : ouverture du client mail (mailto:) ---------- */
   const contactForm = document.getElementById("contactForm");
   if (contactForm) {
@@ -141,6 +166,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
       const name = contactForm.name.value.trim();
       const email = contactForm.email.value.trim();
+      const requestType = contactForm.requestType.value;
       const subject = contactForm.subject.value.trim();
       const message = contactForm.message.value.trim();
 
@@ -149,12 +175,12 @@ document.addEventListener("DOMContentLoaded", () => {
         return;
       }
 
-      const mailSubject = encodeURIComponent(`[Portfolio] ${subject}`);
+      const mailSubject = encodeURIComponent(`[${requestType}] ${subject}`);
       const mailBody = encodeURIComponent(
-        `Nom : ${name}\nEmail : ${email}\n\n${message}`
+        `Nom : ${name}\nEmail : ${email}\nType de demande : ${requestType}\n\n${message}`
       );
 
-      window.location.href = `mailto:${CONFIG.EMAIL_CONTACT}?subject=${mailSubject}&body=${mailBody}`;
+      window.location.href = `mailto:${CONTACT_EMAIL}?subject=${mailSubject}&body=${mailBody}`;
     });
   }
 });
